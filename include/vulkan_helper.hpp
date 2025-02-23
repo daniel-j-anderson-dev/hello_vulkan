@@ -55,12 +55,6 @@ auto get_glfw_extensions() noexcept
   auto glfw_extensions =
       glfwGetRequiredInstanceExtensions(&glfw_extensions_count);
 
-  std::println("GLFW extensions");
-  for (uint32_t i = 0; i < glfw_extensions_count; ++i) {
-    std::println("\t{}", glfw_extensions[i]);
-  }
-  std::println();
-
   return std::tuple(glfw_extensions, glfw_extensions_count);
 }
 
@@ -139,7 +133,7 @@ auto get_vulkan_extensions() noexcept -> std::vector<VkExtensionProperties> {
   return extensions;
 }
 
-auto initialize_vulkan() noexcept -> std::expected<VkInstance, Error> {
+auto create_vulkan_instance() noexcept -> std::expected<VkInstance, Error> {
   // setup application metadata for vulkan
   auto application_information = get_vulkan_application_information();
 
@@ -167,9 +161,25 @@ auto initialize_vulkan() noexcept -> std::expected<VkInstance, Error> {
     return std::unexpected(Error::failed_to_initialize_vulkan(result));
   }
 
-  get_vulkan_extensions();
+  // std::println("GLFW extensions");
+  // for (uint32_t i = 0; i < glfw_extensions_count; ++i) {
+  //   std::println("\t{}", glfw_extensions[i]);
+  // }
+  // std::println();
+  // get_vulkan_extensions();
 
   return instance;
+}
+
+auto initialize_vulkan() noexcept -> std::expected<std::tuple<VkInstance>, Error> {
+  VkInstance instance;
+  if (auto result = create_vulkan_instance(); result.has_value()) {
+    instance = *result;
+  } else {
+    return std::unexpected(result.error());
+  }
+
+  return std::tuple(instance);
 }
 
 auto initialize() noexcept
@@ -184,7 +194,7 @@ auto initialize() noexcept
 
   VkInstance vulkan_instance;
   if (auto result = initialize_vulkan(); result.has_value()) {
-    vulkan_instance = *result;
+    std::tie(vulkan_instance) = *result;
   } else {
     return std::unexpected(result.error());
   }
