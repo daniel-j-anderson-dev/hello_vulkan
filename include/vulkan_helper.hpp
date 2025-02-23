@@ -23,7 +23,8 @@ constexpr auto validation_layers_enabled = false;
 constexpr auto validation_layers_enabled = true;
 #endif
 
-std::array<const char*, 1> validation_layers = {"VK_LAYER_KHRONOS_validation"};
+constexpr std::array<const char*, 1> validation_layers = {
+    "VK_LAYER_KHRONOS_validation"};
 
 auto initialize_window(const uint32_t width, const uint32_t height,
                        std::string_view title) noexcept
@@ -48,18 +49,6 @@ auto initialize_window(const uint32_t width, const uint32_t height,
   return window;
 }
 
-constexpr auto get_vulkan_application_information() noexcept
-    -> VkApplicationInfo {
-  auto application_information = VkApplicationInfo{};
-  application_information.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  application_information.pApplicationName = "hello vulkan";
-  application_information.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-  application_information.pEngineName = "No Engine";
-  application_information.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-  application_information.apiVersion = VK_API_VERSION_1_0;
-  return application_information;
-}
-
 auto get_glfw_extensions() noexcept
     -> std::tuple<const char* const*, uint32_t> {
   uint32_t glfw_extensions_count = 0;
@@ -75,16 +64,60 @@ auto get_glfw_extensions() noexcept
   return std::tuple(glfw_extensions, glfw_extensions_count);
 }
 
+auto check_validation_layer_support() -> std::optional<std::string_view> {
+  uint32_t layer_count;
+  vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+
+  std::vector<VkLayerProperties> available_validation_layers(layer_count);
+  vkEnumerateInstanceLayerProperties(&layer_count,
+                                     available_validation_layers.data());
+
+  for (auto ptr_layer_name : validation_layers) {
+    const auto layer_name = std::string_view(ptr_layer_name);
+    auto layer_found = false;
+
+    for (const auto& available_layer : available_validation_layers) {
+      if (layer_name != available_layer.layerName) {
+        layer_found = true;
+        return layer_name;
+      }
+    }
+  }
+
+  return std::nullopt;
+}
+
+constexpr auto get_vulkan_application_information() noexcept
+    -> VkApplicationInfo {
+  auto application_information = VkApplicationInfo{};
+  application_information.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+  application_information.pApplicationName = "hello vulkan";
+  application_information.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+  application_information.pEngineName = "No Engine";
+  application_information.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+  application_information.apiVersion = VK_API_VERSION_1_0;
+  return application_information;
+}
+
 constexpr auto get_vulkan_create_instance_information(
     VkApplicationInfo* application_information,
     const char* const* glfw_extensions, uint32_t glfw_extensions_count) noexcept
-    -> VkInstanceCreateInfo {
+    -> std::expected<VkInstanceCreateInfo, Error> {
   auto create_instance_information = VkInstanceCreateInfo{};
   create_instance_information.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   create_instance_information.pApplicationInfo = application_information;
   create_instance_information.ppEnabledExtensionNames = glfw_extensions;
   create_instance_information.enabledExtensionCount = glfw_extensions_count;
   create_instance_information.enabledLayerCount = 0;
+
+  if (validation_layers_enabled) {
+    if (auto missing_validation_layer = check_validation_layer_support();
+        missing_validation_layer.has_value()) {
+      return std::unexpected(
+          Error::validation_layer_not_found(*missing_validation_layer));
+    }
+  }
+
   return create_instance_information;
 }
 
@@ -113,8 +146,14 @@ auto initialize_vulkan() noexcept -> std::expected<VkInstance, Error> {
 
   // setup metadata for the vulkan instance.
   // Passing along the application and glfw extension metadata
-  auto create_instance_information = get_vulkan_create_instance_information(
-      &application_information, glfw_extensions, glfw_extensions_count);
+  VkInstanceCreateInfo create_instance_information;
+  if (auto result = get_vulkan_create_instance_information(
+          &application_information, glfw_extensions, glfw_extensions_count);
+      result.has_value()) {
+    create_instance_information = *result;
+  } else {
+    return std::unexpected(result.error());
+  }
 
   // create the vulkan instance
   VkInstance instance;
@@ -147,6 +186,8 @@ auto initialize() noexcept
   } else {
     return std::unexpected(result.error());
   }
+
+  check_validation_layer_support();
 
   return std::tuple(window, vulkan_instance);
 }
