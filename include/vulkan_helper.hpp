@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vulkan/vulkan_core.h>
 #include <cstdint>
 #include <expected>
 #include <string_view>
@@ -61,6 +60,7 @@ constexpr auto get_vulkan_create_instance_information(
   create_instance_information.ppEnabledExtensionNames = glfw_extensions;
   create_instance_information.enabledExtensionCount = glfw_extensions_count;
   create_instance_information.enabledLayerCount = 0;
+  return create_instance_information;
 }
 
 auto initialize_vulkan() -> std::expected<VkInstance, Error> {
