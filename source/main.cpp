@@ -20,7 +20,7 @@ auto main() -> int {
     glfwPollEvents();
   }
 
-  deinitialize(window);
+  deinitialize(window, vulkan_instance);
 
   return 0;
 }

@@ -12,6 +12,7 @@
 
 constexpr uint32_t WINDOW_WIDTH = 800;
 constexpr uint32_t WINDOW_HEIGHT = 800;
+constexpr auto title = "hello_vulkan";
 
 auto initialize_window(const uint32_t width, const uint32_t height,
                        std::string_view title)
@@ -36,7 +37,7 @@ auto initialize_window(const uint32_t width, const uint32_t height,
   return window;
 }
 
-constexpr auto get_application_information() -> VkApplicationInfo {
+constexpr auto get_vulkan_application_information() -> VkApplicationInfo {
   auto application_information = VkApplicationInfo{};
   application_information.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   application_information.pApplicationName = "hello vulkan";
@@ -70,7 +71,7 @@ constexpr auto get_vulkan_create_instance_information(
 
 auto initialize_vulkan() -> std::expected<VkInstance, Error> {
   // setup application metadata for vulkan
-  auto application_information = get_application_information();
+  auto application_information = get_vulkan_application_information();
 
   // get glfw extensions metadata
   auto [glfw_extensions, glfw_extensions_count] = get_glfw_extensions();
@@ -80,13 +81,10 @@ auto initialize_vulkan() -> std::expected<VkInstance, Error> {
   auto create_instance_information = get_vulkan_create_instance_information(
       &application_information, glfw_extensions, glfw_extensions_count);
 
-  // dont use allocation call backs for now
-  const VkAllocationCallbacks* allocator = nullptr;
-
   // create the vulkan instance
   VkInstance instance;
   auto result =
-      vkCreateInstance(&create_instance_information, allocator, &instance);
+      vkCreateInstance(&create_instance_information, nullptr, &instance);
 
   // check for errors
   if (is_create_instance_error(result)) {
@@ -98,8 +96,7 @@ auto initialize_vulkan() -> std::expected<VkInstance, Error> {
 
 auto initialize() -> std::expected<std::tuple<GLFWwindow*, VkInstance>, Error> {
   GLFWwindow* window = nullptr;
-  if (auto result =
-          initialize_window(WINDOW_WIDTH, WINDOW_HEIGHT, "hello_vulkan");
+  if (auto result = initialize_window(WINDOW_WIDTH, WINDOW_HEIGHT, title);
       result.has_value()) {
     window = *result;
   } else {
@@ -116,7 +113,8 @@ auto initialize() -> std::expected<std::tuple<GLFWwindow*, VkInstance>, Error> {
   return std::tuple(window, vulkan_instance);
 }
 
-auto deinitialize(GLFWwindow* window) {
+auto deinitialize(GLFWwindow* window, VkInstance vulkan_instance) {
+  vkDestroyInstance(vulkan_instance, nullptr);
   glfwDestroyWindow(window);
   glfwTerminate();
 }
