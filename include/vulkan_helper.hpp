@@ -64,6 +64,7 @@ auto get_glfw_extensions() noexcept
   return std::tuple(glfw_extensions, glfw_extensions_count);
 }
 
+/// If a validation layer is missing the name of the layer is returned otherwise `std::nullopt`
 auto check_validation_layer_support() -> std::optional<std::string_view> {
   uint32_t layer_count;
   vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
