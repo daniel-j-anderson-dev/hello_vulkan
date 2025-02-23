@@ -74,11 +74,9 @@ auto check_validation_layer_support() -> std::optional<std::string_view> {
 
   for (auto ptr_layer_name : validation_layers) {
     const auto layer_name = std::string_view(ptr_layer_name);
-    auto layer_found = false;
 
     for (const auto& available_layer : available_validation_layers) {
       if (layer_name != available_layer.layerName) {
-        layer_found = true;
         return layer_name;
       }
     }
