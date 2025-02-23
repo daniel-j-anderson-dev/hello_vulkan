@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <expected>
-// #include <print>
+#include <print>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -55,11 +55,11 @@ auto get_glfw_extensions() noexcept
   auto glfw_extensions =
       glfwGetRequiredInstanceExtensions(&glfw_extensions_count);
 
-  // std::println("GLFW extensions");
-  // for (uint32_t i = 0; i < glfw_extensions_count; ++i) {
-  //   std::println("\t{}", glfw_extensions[i]);
-  // }
-  // std::println();
+  std::println("GLFW extensions");
+  for (uint32_t i = 0; i < glfw_extensions_count; ++i) {
+    std::println("\t{}", glfw_extensions[i]);
+  }
+  std::println();
 
   return std::tuple(glfw_extensions, glfw_extensions_count);
 }
@@ -107,7 +107,6 @@ constexpr auto get_vulkan_create_instance_information(
   create_instance_information.pApplicationInfo = application_information;
   create_instance_information.ppEnabledExtensionNames = glfw_extensions;
   create_instance_information.enabledExtensionCount = glfw_extensions_count;
-  create_instance_information.enabledLayerCount = 0;
 
   if (validation_layers_enabled) {
     if (auto missing_validation_layer = check_validation_layer_support();
@@ -115,6 +114,10 @@ constexpr auto get_vulkan_create_instance_information(
       return std::unexpected(
           Error::validation_layer_not_found(*missing_validation_layer));
     }
+
+    create_instance_information.enabledLayerCount =
+        static_cast<uint32_t>(validation_layers.size());
+    create_instance_information.ppEnabledLayerNames = validation_layers.data();
   }
 
   return create_instance_information;
@@ -128,10 +131,10 @@ auto get_vulkan_extensions() noexcept -> std::vector<VkExtensionProperties> {
   vkEnumerateInstanceExtensionProperties(nullptr, &extension_count,
                                          extensions.data());
 
-  // std::println("available vulkan extensions:");
-  // for (const auto& extension : extensions) {
-  //   std::println("\t{}", extension.extensionName);
-  // }
+  std::println("available vulkan extensions:");
+  for (const auto& extension : extensions) {
+    std::println("\t{}", extension.extensionName);
+  }
 
   return extensions;
 }
