@@ -3,13 +3,13 @@
 
 #include <GLFW/glfw3.h>
 
-#include "error.hpp"
 #include "vulkan_helper.hpp"
 
 auto main() -> int {
   GLFWwindow* window = nullptr;
+  VkInstance vulkan_instance;
   if (auto result = initialize(); result.has_value()) {
-    std::tie(window) = *result;
+    std::tie(window, vulkan_instance) = *result;
   } else {
     std::println("An error occurred during initialization: {}",
                  result.error().to_string());
