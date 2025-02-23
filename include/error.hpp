@@ -13,31 +13,41 @@ enum class ErrorKind {
   FailedToInitializeGLFW,
   FailedToCreateWindow,
   FailedToInitializeVulkan,
+  ValidationLayerNotFound,
 };
 
 struct Error {
  private:
   ErrorKind _kind;
   std::optional<VkResult> failed_to_initialize_vulkan_data;
+  std::optional<std::string_view> missing_validation_layer;
 
   Error() = delete;
   constexpr Error(
-      ErrorKind kind,
-      std::optional<VkResult> failed_to_initialize_vulkan_data) noexcept
+      ErrorKind kind, std::optional<VkResult> failed_to_initialize_vulkan_data,
+      std::optional<std::string_view> missing_validation_layer) noexcept
       : _kind(kind),
-        failed_to_initialize_vulkan_data(failed_to_initialize_vulkan_data) {};
+        failed_to_initialize_vulkan_data(failed_to_initialize_vulkan_data),
+        missing_validation_layer(missing_validation_layer) {};
 
  public:
   constexpr static auto failed_to_create_window() noexcept -> Error {
-    return Error(ErrorKind::FailedToCreateWindow, std::nullopt);
+    return Error(ErrorKind::FailedToCreateWindow, std::nullopt, std::nullopt);
   }
 
   constexpr static auto failed_to_initialize_vulkan(
       VkResult initialization_error) noexcept -> Error {
-    return Error(ErrorKind::FailedToInitializeVulkan, initialization_error);
+    return Error(ErrorKind::FailedToInitializeVulkan, initialization_error,
+                 std::nullopt);
   }
   constexpr static auto failed_to_initialize_glfw() noexcept -> Error {
-    return Error(ErrorKind::FailedToInitializeGLFW, std::nullopt);
+    return Error(ErrorKind::FailedToInitializeGLFW, std::nullopt, std::nullopt);
+  }
+
+  constexpr static auto validation_layer_not_found(
+      std::string_view missing_layer_name) noexcept -> Error {
+    return Error(ErrorKind::ValidationLayerNotFound, std::nullopt,
+                 missing_layer_name);
   }
 
   constexpr auto kind(this const Error& self) noexcept -> const ErrorKind& {
@@ -55,6 +65,9 @@ struct Error {
             vkresult_to_string(*self.failed_to_initialize_vulkan_data));
       case ErrorKind::FailedToInitializeGLFW:
         return "Failed to initialize GLFW";
+      case ErrorKind::ValidationLayerNotFound:
+        return std::format("Validation layer not found: {}",
+                           *self.missing_validation_layer);
       default:
         return "UNRECOGNIZED ERROR KIND THIS IS A BUG";
     }
@@ -71,7 +84,8 @@ constexpr auto is_create_instance_error(
          create_instance_result == VK_ERROR_INCOMPATIBLE_DRIVER;
 }
 
-constexpr auto vkresult_to_string(VkResult result) noexcept -> std::string_view {
+constexpr auto vkresult_to_string(VkResult result) noexcept
+    -> std::string_view {
   switch (result) {
     case (VK_SUCCESS):
       return "VK_SUCCESS";
