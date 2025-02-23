@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <expected>
-#include <print>
+// #include <print>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -55,11 +55,11 @@ auto get_glfw_extensions() noexcept
   auto glfw_extensions =
       glfwGetRequiredInstanceExtensions(&glfw_extensions_count);
 
-  std::println("GLFW extensions");
-  for (uint32_t i = 0; i < glfw_extensions_count; ++i) {
-    std::println("\t{}", glfw_extensions[i]);
-  }
-  std::println();
+  // std::println("GLFW extensions");
+  // for (uint32_t i = 0; i < glfw_extensions_count; ++i) {
+  //   std::println("\t{}", glfw_extensions[i]);
+  // }
+  // std::println();
 
   return std::tuple(glfw_extensions, glfw_extensions_count);
 }
@@ -128,10 +128,10 @@ auto get_vulkan_extensions() noexcept -> std::vector<VkExtensionProperties> {
   vkEnumerateInstanceExtensionProperties(nullptr, &extension_count,
                                          extensions.data());
 
-  std::println("available vulkan extensions:");
-  for (const auto& extension : extensions) {
-    std::println("\t{}", extension.extensionName);
-  }
+  // std::println("available vulkan extensions:");
+  // for (const auto& extension : extensions) {
+  //   std::println("\t{}", extension.extensionName);
+  // }
 
   return extensions;
 }
