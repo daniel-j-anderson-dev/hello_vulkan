@@ -10,6 +10,7 @@
 constexpr auto vkresult_to_string(VkResult result) -> std::string_view;
 
 enum class ErrorKind {
+  FailedToInitializeGLFW,
   FailedToCreateWindow,
   FailedToInitializeVulkan,
 };
@@ -34,6 +35,9 @@ struct Error {
       VkResult initialization_error) -> Error {
     return Error(ErrorKind::FailedToInitializeVulkan, initialization_error);
   }
+  constexpr static auto failed_to_initialize_glfw() -> Error {
+    return Error(ErrorKind::FailedToInitializeGLFW, std::nullopt);
+  }
 
   constexpr auto kind(this const Error& self) noexcept -> const ErrorKind& {
     return self._kind;
@@ -42,12 +46,14 @@ struct Error {
   auto to_string(this const Error& self) noexcept -> std::string {
     switch (self._kind) {
       case ErrorKind::FailedToCreateWindow:
-        return "Failed to initialize GLFW Window";
+        return "Failed to create a GLFW Window";
       case ErrorKind::FailedToInitializeVulkan:
         return std::format(
             "Failed to initialize Vulkan: error number: {} ({})",
             static_cast<int64_t>(*self.failed_to_initialize_vulkan_data),
             vkresult_to_string(*self.failed_to_initialize_vulkan_data));
+      case ErrorKind::FailedToInitializeGLFW:
+        return "Failed to initialize GLFW";
       default:
         return "UNRECOGNIZED ERROR KIND THIS IS A BUG";
     }

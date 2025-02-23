@@ -16,6 +16,11 @@ constexpr uint32_t WINDOW_HEIGHT = 800;
 auto initialize_window(const uint32_t width, const uint32_t height,
                        std::string_view title)
     -> std::expected<GLFWwindow*, Error> {
+  // initialize glfw
+  if (glfwInit() == GLFW_FALSE) {
+    return std::unexpected(Error::failed_to_initialize_glfw());
+  }
+
   // tell glfw not to create an OpenGL context
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
