@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-constexpr auto vkresult_to_string(VkResult result) -> std::string_view;
+constexpr auto vkresult_to_string(VkResult result) noexcept -> std::string_view;
 
 enum class ErrorKind {
   FailedToInitializeGLFW,
@@ -21,21 +21,22 @@ struct Error {
   std::optional<VkResult> failed_to_initialize_vulkan_data;
 
   Error() = delete;
-  Error(ErrorKind kind,
-        std::optional<VkResult> failed_to_initialize_vulkan_data)
+  constexpr Error(
+      ErrorKind kind,
+      std::optional<VkResult> failed_to_initialize_vulkan_data) noexcept
       : _kind(kind),
         failed_to_initialize_vulkan_data(failed_to_initialize_vulkan_data) {};
 
  public:
-  constexpr static auto failed_to_create_window() -> Error {
+  constexpr static auto failed_to_create_window() noexcept -> Error {
     return Error(ErrorKind::FailedToCreateWindow, std::nullopt);
   }
 
   constexpr static auto failed_to_initialize_vulkan(
-      VkResult initialization_error) -> Error {
+      VkResult initialization_error) noexcept -> Error {
     return Error(ErrorKind::FailedToInitializeVulkan, initialization_error);
   }
-  constexpr static auto failed_to_initialize_glfw() -> Error {
+  constexpr static auto failed_to_initialize_glfw() noexcept -> Error {
     return Error(ErrorKind::FailedToInitializeGLFW, std::nullopt);
   }
 
@@ -60,8 +61,8 @@ struct Error {
   }
 };
 
-constexpr auto is_create_instance_error(VkResult create_instance_result)
-    -> bool {
+constexpr auto is_create_instance_error(
+    VkResult create_instance_result) noexcept -> bool {
   return create_instance_result == VK_ERROR_OUT_OF_HOST_MEMORY ||
          create_instance_result == VK_ERROR_OUT_OF_DEVICE_MEMORY ||
          create_instance_result == VK_ERROR_INITIALIZATION_FAILED ||
@@ -70,7 +71,7 @@ constexpr auto is_create_instance_error(VkResult create_instance_result)
          create_instance_result == VK_ERROR_INCOMPATIBLE_DRIVER;
 }
 
-constexpr auto vkresult_to_string(VkResult result) -> std::string_view {
+constexpr auto vkresult_to_string(VkResult result) noexcept -> std::string_view {
   switch (result) {
     case (VK_SUCCESS):
       return "VK_SUCCESS";
