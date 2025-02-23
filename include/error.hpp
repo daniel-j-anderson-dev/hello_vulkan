@@ -46,7 +46,7 @@ struct Error {
       case ErrorKind::FailedToInitializeVulkan:
         return std::format(
             "Failed to initialize Vulkan: error number: {} ({})",
-            static_cast<uint64_t>(*self.failed_to_initialize_vulkan_data),
+            static_cast<int64_t>(*self.failed_to_initialize_vulkan_data),
             vkresult_to_string(*self.failed_to_initialize_vulkan_data));
       default:
         return "UNRECOGNIZED ERROR KIND THIS IS A BUG";
